@@ -7,16 +7,9 @@ import (
 	"os"
 )
 
-func listTodos(todos *todo.Todos) {
-	for _, todo := range *todos {
-		fmt.Println(todo.Task)
-	}
-}
-
 func main() {
 	filename := "todos.json"
 	todos := &todo.Todos{}
-	progArgs := os.Args[1:]
 
 	err := todos.Get(filename)
 
@@ -31,31 +24,35 @@ func main() {
 
 	flag.Parse()
 
-	if len(progArgs) < 1 {
-		listTodos(todos)
-	}
-
-	if *listTodosFlag {
-		listTodos(todos)
-		os.Exit(0)
-	}
-
-	if *addTodoFlag != "" {
+	switch {
+	case *listTodosFlag:
+		for _, todo := range *todos {
+			if !todo.Done {
+				fmt.Println(todo.Task)
+			}
+		}
+	case *addTodoFlag != "":
 		task := *addTodoFlag
 		todos.Add(task)
 		if err := todos.Save(filename); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-	}
-
-	if *completeTodoFlag != -1 {
+	case *completeTodoFlag > -1:
 		index := *completeTodoFlag
-		todos.Delete(index)
+		if err := todos.Complete(index); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
 		if err := todos.Save(filename); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+	default:
+		fmt.Fprintln(os.Stderr, "Invalid option")
+		os.Exit(1)
+
 	}
 
 }
