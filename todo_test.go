@@ -2,7 +2,10 @@ package todo_test
 
 import (
 	"Develop/go-projects/todo"
+	"io/ioutil"
+	"os"
 
+	// "fmt"
 	"testing"
 )
 
@@ -36,18 +39,60 @@ func TestAddTodo(t *testing.T) {
 func TestCompleteTodo(t *testing.T) {
 	todos := todo.Todos{}
 	todos.Add("Vanquish foes")
-	completedTodo, err := todos.Complete(0)
+	err := todos.Complete(0)
 
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 
-	if todos[0].Done != completedTodo.Done {
-		t.Errorf("Error updating Completed todo Done status, expected %t, got %t", true, completedTodo.Done)
+	if todos[0].Done != true {
+		t.Errorf("Error updating Completed todo Done status, expected %t, got %t", true, false)
+	}
+}
+
+func TestDeleteTodo(t *testing.T) {
+	todos := todo.Todos{}
+	todos.Add("Vanquish foes")
+	todos.Add("Make hummus")
+	todos.Add("Do the dishes")
+	err := todos.Delete(2)
+	if err != nil {
+		t.Errorf("%v", err)
 	}
 
-	if todos[0].CompletedAt != completedTodo.CompletedAt {
-		t.Errorf("Completed todo has invalid timestamp, expected %v, got %v", completedTodo.CompletedAt, todos[0].CompletedAt)
+	if len(todos) != 2 {
+		t.Errorf("Error deleting todo, expected %d, got %d", 2, len(todos))
+	}
+}
+
+func TestSaveGet(t *testing.T) {
+	t1 := todo.Todos{}
+	t2 := todo.Todos{}
+
+	t1.Add("Vanquish foes")
+	t1.Add("Make hummus")
+
+	tmpFile, err := ioutil.TempFile("", "test_todos")
+
+	if err != nil {
+		t.Errorf("Error creating temp file %s", err)
 	}
 
+	defer os.Remove(tmpFile.Name())
+
+	err = t1.Save(tmpFile.Name())
+
+	if err != nil {
+		t.Errorf("Error saving list fo file %s", err)
+	}
+
+	err = t2.Get(tmpFile.Name())
+
+	if err != nil {
+		t.Errorf("Error getting list from file %s", err)
+	}
+
+	if t1[0].Task != t2[0].Task {
+		t.Errorf("Expected task from saved list to be %q, but got %q", t1[0].Task, t2[0].Task)
+	}
 }
