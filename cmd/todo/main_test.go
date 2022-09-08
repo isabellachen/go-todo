@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
 var (
 	binName  = "todo"
-	fileName = "todo.json"
+	fileName = "todos.json"
 )
 
 func TestMain(m *testing.M) {
@@ -26,9 +28,41 @@ func TestMain(m *testing.M) {
 		fmt.Fprintf(os.Stderr, "Cannot build tool %s: %s", binName, err)
 		os.Exit(1)
 	}
+
 	result := m.Run()
 	fmt.Println("Cleaning up...")
 	os.Remove(binName)
 	os.Remove(fileName)
 	os.Exit(result)
+}
+
+func TestTodoCli(t *testing.T) {
+	task := "Vanquish foes"
+	dir, err := os.Getwd()
+	cmdPath := filepath.Join(dir, binName)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("AddNewTask", func(t *testing.T) {
+		cmd := exec.Command(cmdPath, strings.Split(task, " ")...)
+
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("ListTasks", func(t *testing.T) {
+		cmd := exec.Command(cmdPath)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		expected := "Vanquish foes\n"
+		if string(out) != expected {
+			t.Errorf("Expected %q, got %q instead\n", expected, string(out))
+		}
+	})
 }
