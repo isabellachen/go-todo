@@ -78,3 +78,17 @@ func (todos *Todos) Get(filename string) error {
 	}
 	return json.Unmarshal(file, todos)
 }
+
+func (todos *Todos) String() string {
+	formatted := ""
+
+	for i, todo := range *todos {
+		prefix := " "
+		if todo.Done {
+			prefix = "X"
+		}
+		formatted = formatted + fmt.Sprintf("%s %d: %s\n", prefix, i+1, todo.Task)
+	}
+
+	return formatted
+}

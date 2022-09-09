@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,6 +16,10 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	if os.Getenv("TODO_FILENAME") != "" {
+		filename = os.Getenv("TODO_FILENAME")
+	}
+
 	fmt.Println("Building tool...")
 
 	if runtime.GOOS == "windows" {
@@ -37,6 +42,7 @@ func TestMain(m *testing.M) {
 
 func TestTodoCli(t *testing.T) {
 	task := "Vanquish foes"
+	task2 := "Ride chocobo"
 	dir, err := os.Getwd()
 	cmdPath := filepath.Join(dir, binName)
 
@@ -45,7 +51,20 @@ func TestTodoCli(t *testing.T) {
 	}
 
 	t.Run("AddNewTask", func(t *testing.T) {
-		cmd := exec.Command(cmdPath, fmt.Sprintf("-add=%s", task))
+		cmd := exec.Command(cmdPath, "-add", task)
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("AddNewTaskFromSTDIN", func(t *testing.T) {
+		cmd := exec.Command(cmdPath, "-add")
+		cmdStdIn, err := cmd.StdinPipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+		io.WriteString(cmdStdIn, task2)
+		cmdStdIn.Close()
 
 		if err := cmd.Run(); err != nil {
 			t.Fatal(err)
@@ -59,9 +78,16 @@ func TestTodoCli(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		expected := "Vanquish foes\n"
+		expected := fmt.Sprintf("  1: %s\n  2: %s\n", task, task2)
 		if string(out) != expected {
 			t.Errorf("Expected %q, got %q instead\n", expected, string(out))
+		}
+	})
+
+	t.Run("CompleteTask", func(t *testing.T) {
+		cmd := exec.Command(cmdPath, fmt.Sprintf("-complete=%d", 0))
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
 		}
 	})
 }

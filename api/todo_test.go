@@ -1,11 +1,9 @@
 package todo_test
 
 import (
-	"Develop/go-projects/todo"
+	"Develop/go-projects/todo/api"
 	"io/ioutil"
 	"os"
-
-	// "fmt"
 	"testing"
 )
 
