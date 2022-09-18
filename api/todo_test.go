@@ -1,7 +1,7 @@
 package todo_test
 
 import (
-	"Develop/go-projects/todo/api"
+	todo "Develop/go-projects/todo/api"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -25,19 +25,19 @@ func TestAddTodo(t *testing.T) {
 		t.Errorf("Expected todo with title %q but got %q", title, todos[0].Task)
 	}
 
-	if todos[0].Id != 0 {
-		t.Errorf("Expected todo with id %d but got %d", 0, todos[0].Id)
+	if todos[0].Id != 1 {
+		t.Errorf("Expected todo with id %d but got %d", 1, todos[0].Id)
 	}
 
-	if todos[1].Id != 1 {
-		t.Errorf("Expected todo with id %d but got %d", 1, todos[1].Id)
+	if todos[1].Id != 2 {
+		t.Errorf("Expected todo with id %d but got %d", 2, todos[1].Id)
 	}
 }
 
 func TestCompleteTodo(t *testing.T) {
 	todos := todo.Todos{}
 	todos.Add("Vanquish foes")
-	err := todos.Complete(0)
+	err := todos.Complete(1)
 
 	if err != nil {
 		t.Errorf("%v", err)

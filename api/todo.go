@@ -19,7 +19,7 @@ type todo struct {
 type Todos []todo
 
 func (todos *Todos) Add(task string) bool {
-	id := len(*todos)
+	id := len(*todos) + 1
 	todo := todo{
 		Id:          id,
 		Task:        task,
@@ -33,24 +33,26 @@ func (todos *Todos) Add(task string) bool {
 	return true
 }
 
-func (todos *Todos) Complete(i int) error {
+func (todos *Todos) Complete(id int) error {
+	index := id - 1
 	todoList := *todos
-	if i < 0 || i > len(todoList) {
-		return fmt.Errorf("item %d does not exist", i)
+	if index < 0 || index > len(todoList) {
+		return fmt.Errorf("item %d does not exist", id)
 	}
-	todoList[i].Done = true
-	todoList[i].CompletedAt = time.Now()
+	todoList[index].Done = true
+	todoList[index].CompletedAt = time.Now()
 
 	return nil
 }
 
-func (todos *Todos) Delete(i int) error {
+func (todos *Todos) Delete(id int) error {
+	index := id - 1
 	todoList := *todos
-	if i < 0 || i > len(todoList) {
-		return fmt.Errorf("item %d does not exist", i)
+	if index < 0 || index > len(todoList) {
+		return fmt.Errorf("item %d does not exist", id)
 	}
 
-	*todos = append(todoList[:i], todoList[i+1:]...)
+	*todos = append(todoList[:index], todoList[index+1:]...)
 
 	return nil
 }
@@ -82,12 +84,12 @@ func (todos *Todos) Get(filename string) error {
 func (todos *Todos) String() string {
 	formatted := ""
 
-	for i, todo := range *todos {
+	for index, todo := range *todos {
 		prefix := " "
 		if todo.Done {
 			prefix = "X"
 		}
-		formatted = formatted + fmt.Sprintf("%s %d: %s\n", prefix, i+1, todo.Task)
+		formatted = formatted + fmt.Sprintf("%s %d: %s\n", prefix, index+1, todo.Task)
 	}
 
 	return formatted

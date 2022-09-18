@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Develop/go-projects/todo/api"
+	todo "Develop/go-projects/todo/api"
 	"bufio"
 	"flag"
 	"fmt"
@@ -38,17 +38,19 @@ func main() {
 	if os.Getenv("TODO_FILENAME") != "" {
 		filename = os.Getenv("TODO_FILENAME")
 	}
+
 	todos := &todo.Todos{}
 
 	err := todos.Get(filename)
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, "Err: todos.GET", err)
 		os.Exit(1)
 	}
 
 	listTodosFlag := flag.Bool("list", false, "list todos")
 	addTodoFlag := flag.Bool("add", false, "add a todo")
+	deleteTodoFlag := flag.Int("delete", -1, "delete a todo")
 	completeTodoFlag := flag.Int("complete", -1, "complete a todo")
 
 	flag.Parse()
@@ -61,13 +63,13 @@ func main() {
 		task, err := getTask(os.Stdin, flag.Args()...)
 
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			fmt.Fprintln(os.Stderr, "Err: getTask", err)
 			os.Exit(1)
 		}
 
 		todos.Add(task)
 		if err := todos.Save(filename); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			fmt.Fprintln(os.Stderr, "Err: todos.Save", err)
 			os.Exit(1)
 		}
 	case *completeTodoFlag > -1:
@@ -81,10 +83,20 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-	default:
-		fmt.Fprintln(os.Stderr, "Invalid option")
-		os.Exit(1)
+	case *deleteTodoFlag > -1:
+		index := *deleteTodoFlag
+		if err := todos.Delete(index); err != nil {
+			fmt.Fprint(os.Stderr, err)
+			os.Exit(1)
+		}
 
+		if err := todos.Save(filename); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	default:
+		fmt.Fprintln(os.Stderr, "Invalid option, use go run main.go -h for help")
+		os.Exit(1)
 	}
 
 }

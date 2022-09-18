@@ -11,13 +11,22 @@ import (
 )
 
 var (
-	binName  = "todo"
-	fileName = "todos.json"
+	binName          = "todo"
+	fileNameForTests = "todos.json"
 )
 
 func TestMain(m *testing.M) {
+	// TestMain is where we do environment set ups of tear downs for this
+	// suite of integration tests.
+	err := os.Setenv("TODO_FILENAME", "test-todos.json")
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error setting test env variable")
+		os.Exit(1)
+	}
+
 	if os.Getenv("TODO_FILENAME") != "" {
-		filename = os.Getenv("TODO_FILENAME")
+		fileNameForTests = os.Getenv("TODO_FILENAME")
 	}
 
 	fmt.Println("Building tool...")
@@ -33,10 +42,15 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	result := m.Run()
+	result := m.Run() // Here, we run the tests.
 	fmt.Println("Cleaning up...")
+	err = os.Unsetenv("TODO_FILENAME")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error setting test env variable")
+		os.Exit(1)
+	}
 	os.Remove(binName)
-	os.Remove(fileName)
+	os.Remove(fileNameForTests)
 	os.Exit(result)
 }
 
@@ -85,7 +99,7 @@ func TestTodoCli(t *testing.T) {
 	})
 
 	t.Run("CompleteTask", func(t *testing.T) {
-		cmd := exec.Command(cmdPath, fmt.Sprintf("-complete=%d", 0))
+		cmd := exec.Command(cmdPath, fmt.Sprintf("-complete=%d", 1))
 		if err := cmd.Run(); err != nil {
 			t.Fatal(err)
 		}
